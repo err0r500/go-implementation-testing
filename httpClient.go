@@ -28,7 +28,7 @@ func (fetcher HttpQuoteFetcher) FetchQuote(subject string) (*Quote, error) {
 		return nil, err
 	}
 
-	if response.StatusCode >= http.StatusBadRequest {
+	if response.StatusCode != http.StatusOK {
 		return nil, errors.New(response.Status)
 	}
 
