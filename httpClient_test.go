@@ -43,9 +43,16 @@ func TestHttpQuoteFetcher_FetchQuote(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	t.Run("more tricky test cases", func(t *testing.T) {
-
-	})
+	// t.Run("more tricky test cases", func(t *testing.T) {
+	// 	fakeServer := getDummyServer()
+	// 	defer fakeServer.Close()
+	//
+	// 	_, err := client.New(fakeServer.URL, client.SetHttpGet(func(string) (*http.Response, error) {
+	// 		return nil, errors.New("")
+	// 	})).FetchQuote(subject)
+	//
+	// 	assert.Error(t, err)
+	// })
 }
 
 func validResponse(w http.ResponseWriter, validQuote *client.Quote) {
