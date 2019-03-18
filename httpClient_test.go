@@ -2,6 +2,8 @@ package client_test
 
 import (
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -43,16 +45,50 @@ func TestHttpQuoteFetcher_FetchQuote(t *testing.T) {
 		assert.Error(t, err)
 	})
 
-	// t.Run("more tricky test cases", func(t *testing.T) {
-	// 	fakeServer := getDummyServer()
-	// 	defer fakeServer.Close()
-	//
-	// 	_, err := client.New(fakeServer.URL, client.SetHttpGet(func(string) (*http.Response, error) {
-	// 		return nil, errors.New("")
-	// 	})).FetchQuote(subject)
-	//
-	// 	assert.Error(t, err)
-	// })
+	t.Run("more tricky test cases", func(t *testing.T) {
+		t.Run("error on httpGet", func(t *testing.T) {
+			failureTest(t,
+				client.SetHttpGet(func(string) (*http.Response, error) {
+					return nil, errors.New("")
+				}),
+			)
+		})
+
+		t.Run("nil on httpGet", func(t *testing.T) {
+			failureTest(t,
+				client.SetHttpGet(func(string) (*http.Response, error) {
+					return nil, nil
+				}),
+			)
+		})
+
+		t.Run("error on readBody", func(t *testing.T) {
+			failureTest(t,
+				client.SetReadBody(func(io.Reader) ([]byte, error) {
+					return nil, errors.New("")
+				}),
+			)
+		})
+
+		t.Run("error on unMarshalResp", func(t *testing.T) {
+			failureTest(t,
+				client.SetRespUnmarshaller(func([]byte, interface{}) error {
+					return errors.New("")
+				}),
+			)
+		})
+	})
+}
+
+func failureTest(t *testing.T, mutator func(*client.HttpQuoteFetcher)) {
+	fakeServer := getDummyServer()
+	defer fakeServer.Close()
+	_, err := client.New(
+		fakeServer.URL,
+		mutator,
+	).FetchQuote(subject)
+
+	assert.Error(t, err)
 }
 
 func validResponse(w http.ResponseWriter, validQuote *client.Quote) {

@@ -32,9 +32,9 @@ func New(hostname string, mutators ...func(*HttpQuoteFetcher)) *HttpQuoteFetcher
 		unMarshalResp: json.Unmarshal,
 	}
 
-	// for _, mutator := range mutators {
-	// 	mutator(fetch)
-	// }
+	for _, mutator := range mutators {
+		mutator(fetch)
+	}
 	return fetch
 }
 
@@ -43,13 +43,26 @@ func SetHttpGet(customHttpGet HttpGetter) func(*HttpQuoteFetcher) {
 		fetcher.httpGet = customHttpGet
 	}
 }
+func SetReadBody(bodyReader BodyReader) func(*HttpQuoteFetcher) {
+	return func(fetcher *HttpQuoteFetcher) {
+		fetcher.readBody = bodyReader
+	}
+}
+
+func SetRespUnmarshaller(respUnmarshaller RespUnmarshaller) func(*HttpQuoteFetcher) {
+	return func(fetcher *HttpQuoteFetcher) {
+		fetcher.unMarshalResp = respUnmarshaller
+	}
+}
 
 func (fetcher HttpQuoteFetcher) FetchQuote(subject string) (*Quote, error) {
 	response, err := fetcher.httpGet(fetcher.hostname + "/api/" + subject)
 	if err != nil {
 		return nil, err
 	}
-
+	if response == nil {
+		return nil, errors.New("httpGet returned a nil pointer")
+	}
 	if response.StatusCode != http.StatusOK {
 		return nil, errors.New(response.Status)
 	}
